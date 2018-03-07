@@ -1,0 +1,541 @@
+---
+title: "Homework 4 (Strings) by Cininta Pertiwi"
+output:
+  html_notebook:
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+  github_document:
+    toc: false
+---
+***
+### Strings in R: Exercises from [R for Data Science Ch 14](http://r4ds.had.co.nz/strings.html) 
+***
+#### **<span style="color:blue"># 1</span>** 
+##### **<span style="color:blue">14.2.5</span>**    
+
+**| 1 |**
+
+* Difference: The default separator. For `paste()` the default separator is a single space (" ") while for `paste0()` the default is not separators between strings ("").
+* The `paste()` and `paste0()` functions are equivalent to the stringr function `str_c()`.
+* The `paste()` and `paste0()` coerces NA values to chracter by default. The stringr `str_c()` function meanwhile does not coerece NA values by default unless an additional function, `str_replace_na()`, is used.
+
+**| 2 |**  
+The `sep` attribute adds a separator when combining initially separate strings. On the other hand, the `collapse` attribute is am option to combine a vector of strings into a single string with inserting a separator between the spearate strings in the vector. Consider the example in the chunks below.
+```{r results='hide'}
+library(stringr)
+```
+```{r}
+# use `sep` to combine separate strings with separator
+str_c("sub", "topic", sep = "-") # "sub" and "topic" are separate strings
+
+# use `collapse to insert separator into single string
+x <- c("sub", "topic") # a vector of strings
+str_c(x, collapse = "-")
+```
+
+**| 3 |**  
+Extract middle character with `str_sub()` and `str_length()` in chunks below. When length of string is odd, extract only the middle character. When length of string is even, extract the two middle characters.
+```{r}
+# create function to determine the middle character(s)
+middle_char <- function(x) {
+  # when string length is even, subset the two middle characters
+  if (str_length(x) %% 2 == 0) {
+    mid_char_ind <- str_length(x)/2
+    mid_char <- str_sub(x, mid_char_ind, mid_char_ind+1)
+  }
+  # when string length is odd, subset only the middle character
+  else {
+    mid_char_ind <- (str_length(x)/2) + 0.5
+    mid_char <- str_sub(x, mid_char_ind, mid_char_ind)
+  }
+  return(mid_char)
+}
+```
+```{r}
+# use "exploratory" as the odd-numbered string
+middle_char("exploratory")
+
+# use "analysis" as even-numbered string
+middle_char("analysis")
+```
+
+**| 4 |**
+The `str_wrap()` function modifies existing whitespace in a string so that it wraps a paragraph of text to have each line be as similar in length. It operates similar to the way the alignment of a paragraph is 'justified' in text-processing software such as MS Word. I may want to use it when I have a long string yet want to display it such that it can be read without the need for scrolling or if I would want it to show as a column format of certain width.
+
+**| 5 |**
+The `str_trim()` function removes whitespace from strings. The opposite function, which is to add whitespace to strings, is `str_pad()`.
+
+**| 6 |**
+Function to turn a vector into a string.
+```{r}
+# create function
+vector_to_str <- function(x) {
+  require(stringr)
+  lgt <- length(x)
+  str_result <- c()
+  if (lgt == 0) {
+    str_result <- "No strings to display"
+  }
+  else if (lgt == 1) {
+    str_result <- x[1]
+  }
+  else if (lgt == 2) {
+    str_result <- str_c(x[1], " and ", x[2])
+  }
+  else {
+    for(i in 1:lgt) {
+      if (i != lgt) {
+        str_ind <- str_c(x[i], ", ")
+      }
+      else {
+        str_ind <- str_c("and ", x[i])
+      }
+      str_result <- str_c(str_result, str_ind)
+    }
+  }
+  return(str_result)
+}
+```
+```{r}
+# test function with vector length 3
+vector_to_str(c("a", "b", "c"))
+# test function with vector length 3
+vector_to_str(c("a", "b"))
+# test function with vector length 3
+vector_to_str(c("a"))
+# test function with vector length 3
+vector_to_str(c())
+```
+
+##### **<span style="color:blue">14.3.1.1</span>**    
+
+**| 1 |**
+
+* `"\"` does not match because.
+* `"\\"` does not match because.
+* `"\\\"` does not match because.
+
+**| 2 |**
+The sequence `"'\` is matched with `"\"\'\\"`.
+```{r}
+example <- "\"\'\\"
+example
+writeLines(example)
+```
+
+**| 3 |**
+The regular expression `\..\..\..` will match a pattern such as `.a.b.c` and the string representation is `"\\..\\..\\.."`.
+```{r}
+example <- "\\..\\..\\.."
+example
+writeLines(example)
+str_view(c("abc.d.e.f.g.hij"), "\\..\\..\\..")
+```
+  
+##### **<span style="color:blue">14.3.2.1</span>**    
+
+**| 1 |**
+Match the literal string `"$^$"` with the regular expression `\$\^\$` and the string representation `"\\$\\^\\$"`. Examples are given in the chunks below
+```{r}
+writeLines("\\$\\^\\$")
+
+# example that matches $^$
+str_view(c("abc$^$def", "$^$"), "\\$\\^\\$")
+
+# example that matches exactly $^$
+str_view(c("abc$^$def", "$^$"), "^\\$\\^\\$$")
+```
+
+**| 2 |**
+Regular expressions that find all words that:
+
+1. Start with "y" --> `^y`
+```{r}
+str_view(stringr::words, "^y", match = TRUE)
+```
+2. End with "x" --> `x$`
+```{r}
+str_view(stringr::words, "x$", match = TRUE)
+```
+3. Exactly three letters long: `^...$`
+```{r}
+str_subset(str_extract(stringr::words, "^...$"), "^...$")
+```
+4. Have seven letters or more --> `^.......`
+```{r}
+# to view
+# not run
+# str_extract(stringr::words, "^.......", match = TRUE)
+
+# see the at least 7 characters in words with 7 letters or more
+head(str_subset(str_extract(stringr::words, "^......."), "^......."))
+```
+
+##### **<span style="color:blue">14.3.3.1</span>**    
+
+**| 1 |**
+Regular expressions that find all words that:
+
+1. Start with a vowel --> `^[aiueo]`
+```{r}
+# to view
+# not run
+# str_view(stringr::words, "^[aiueo]", match = TRUE)
+
+# see the starting vowels in words starting with vowels
+head(str_subset(str_extract(stringr::words, "^[aiueo]"), "^[aiueo]"))
+```
+2. Only contain consonants --> `^[^aiueo]+$`
+```{r}
+str_view(stringr::words, "^[^aiueo]+$", match = TRUE)
+```
+3. End with `ed` but not `eed` --> `[^e]ed$`
+```{r}
+str_view(stringr::words, "[^e]ed$", match = TRUE)
+```
+4. End with `ing` or `ise` --> `i(ng|se)$`
+```{r}
+str_view(stringr::words, "i(ng|se)$", match = TRUE)
+```
+
+**| 2 |**
+Regular expression to verify the rule "i before e except after c" --> `[^c]ie|cei`
+```{r}
+str_view(stringr::words, "[^c]ie|cei", match = TRUE)
+str_view(stringr::words, "cie|[^c]ei", match = TRUE)
+```
+
+**| 3 |**
+Regular expression to see if "q" is always followed by a "u" --> `q[^u]`
+```{r}
+str_view(stringr::words, "q[^u]", match = TRUE)
+str_view(stringr::words, "q.", match = TRUE)
+```
+
+**| 4 |**
+Match words for British English not American English spelling which include the following differences:
+
+* -our not -or
+* -re not -er
+* -nce not -nse
+* -ise not -ize
+* -ll- not -l-
+
+Regular expression to match these --> `our$|[^aiueo]re$|nce$|ise$|.ll.`
+```{r}
+str_view(c("color", "colour", "center", "centre", "license", "licence", "traveling", "travelling"), "our$|[^aiueo]re$|nce$|ise$|.ll.", match = TRUE)
+```
+
+**| 5 |**
+Regular expression matching telephone numbers. I will use the common format for cell phone numbers in Indonesia.
+
+* Cell phone numbers in Indonesia commonly start with the following combination: 62811, 62812, 62813, 62815, 6817, 62818, 62852, 62853, 62856, 62857, and 62859.
+* The regular expression for these numbers --> `628(1|5)[12356789]`
+
+##### **<span style="color:blue">14.3.4.1</span>**    
+
+**| 1 |**
+Equivalents in {m,n} form:
+
+* `?` --> `{,1}`
+* `+` --> `{1,}`
+* `*` --> `{0,}`
+
+**| 2 |**
+What these regular expressions match:
+
+1. `^.*$` --> Any string.
+```{r}
+str_view(c("these", "are", "strings", "hooray"), "^.*$", match = TRUE)
+```
+
+2. `"\\{.+\\}"` --> Strings containing characters between brackets.
+```{r}
+str_view(c("why", "{why}", "r?", "{r?}"), "\\{.+\\}", match = TRUE)
+```
+
+3. `\d{4}-\d{2}-\d{2}` --> Strings with the format ####-##-## where # represents a single digit.
+```{r}
+str_view(c("12345678", "1234-56-78", "hello", "goddbye"), "\\d{4}-\\d{2}-\\d{2}", match = TRUE)
+```
+4. `"\\\\{4}"` --> Strings that contain four backslashes in a row.
+```{r}
+str_view(c("\\", "\\a\\", "\\\\\\\\", "hello"), "\\\\{4}", match = TRUE)
+```
+
+**| 3 |**
+Regular expressions to find all words that:
+
+1. Start with three consonants --> `^[^aiueo]{3}`
+```{r}
+str_view(stringr::words, "^[^aiueo]{3}", match = TRUE)
+```
+2. Have three or more vowels in a row --> `[aiueo]{3,}`
+```{r}
+str_view(stringr::words, "[aiueo]{3,}", match = TRUE)
+```
+3. Have two or more vowel-consonant pairs in a row --> `([aiueo][^aiueo]){2,}`
+```{r}
+# to view
+# not run
+# str_view(stringr::words, "([aiueo][^aiueo]){2,}", match = TRUE)
+
+# see the 2 or more vowel-consonant pairs in words starting with vowels
+head(str_subset(str_extract(stringr::words, "([aiueo][^aiueo]){2,}"), "([aiueo][^aiueo]){2,}"))
+```
+
+**| 4 |**
+Solve [beginner regexp crosswords](https://regexcrossword.com/challenges/beginner):
+
+* *still an ongoing progress*
+
+##### **<span style="color:blue">14.3.5.1</span>**    
+
+**| 1 |**
+What these expressions will match:
+
+1. `(.)\1\1` --> Strings with three of the same characters in a row.
+```{r}
+str_view(c("aaaaa", "abcde", "aaabc", "11111", "aaa", "aba"), "(.)\\1\\1")
+```
+2. `"(.)(.)\\2\\1"` --> Strings containing a series of characters where there are two of the same characters in a row with boundary characters that are the same.
+```{r}
+str_view(c("aaaaa", "abbaa", "abbba", "a11aa", "abc", "aba"), "(.)(.)\\2\\1")
+```
+3. `(..)\1` --> Strings that repeat a series of two characters once.
+```{r}
+str_view(c("banana", "coconut", "papaya", "cucumber"), "(..)\\1")
+```
+4. `"(.).\\1.\\1"` --> Strings where every other character is the same in a series of five characters.
+```{r}
+str_view(c("abaca", "a.b.c.d", "a.abaca", "aa.bb.c"), "(.).\\1.\\1")
+```
+5. `"(.)(.)(.).*\\3\\2\\1"` --> Strings with a series of three characters that is repeated in the opposite order.
+```{r}
+str_view(c("ababab", "abccba", "cbadefabc", "abacad"), "(.)(.)(.).*\\3\\2\\1")
+```
+
+**| 2 |**
+Regular expressions to match words that:
+
+1. Start and end with the same character --> `^(.).*\1$`
+```{r}
+str_view(stringr::words, "^(.).*\\1$", match = TRUE)
+```
+2. Contain a repeated pair of letters --> `(.)(.).*\1\2`
+```{r}
+str_view(stringr::words, "(.)(.).*\\1\\2", match = TRUE)
+```
+3. Contain one letter repeated in at least three places -->`(.)(.*\1){2,}`
+```{r}
+str_view(stringr::words, "(.)(.*\\1){2,}", match = TRUE)
+```
+
+##### **<span style="color:blue">14.4.2</span>**    
+
+**| 1 |**
+Solve using both (i) a single regular expression and (ii) combination of multiple `str_detect()` calls:
+
+1. All words starting or ending with `x`
+```{r}
+# single regular expression --> ^x|x$
+str_view(stringr::words, "^x|x$", match = TRUE)
+
+# multiple str_detect()
+# yet to be completed
+```
+2. All words starting starting with a vowel, ending with a consonant
+
+* *yet to be completed*
+
+3. Words containing at least one of each different vowel
+
+* *yet to be completed*
+
+**| 2 |**
+*yet to be completed*
+
+##### **<span style="color:blue">14.4.3.1</span>**    
+
+**| 1 |**
+Modify regex to exclude words embedded with a color such as "flickered".
+```{r}
+colours <- c("red", "orange", "yellow", "green", "blue", "purple")
+
+# before modification
+colour_match <- str_c(colours, collapse = "|")
+
+# the modification adds boundaries to the color words
+colour_match_mod <- str_c("\\b", colours, "\\b", collapse = "|")
+head(str_extract_all(str_subset(sentences, colour_match_mod),
+                                colour_match_mod, simplify = TRUE))
+
+# check that the modofication excluded more sentences
+c("before modification" = length(str_subset(sentences, colour_match)),
+  "after modification" = length(str_subset(sentences, colour_match_mod)))
+```
+
+**| 2 |**
+Extract from `stringr::sentences`
+
+1. First word from each sentence --> `"[^ ]+\\b"`
+```{r}
+first_word <- str_extract(sentences, "[^ ]+\\b")
+head(first_word)
+```
+2. All words ending in `ing` --> `"\\b[^ ]+ing\\b"`
+```{r}
+end_ing <- str_extract_all(str_subset(sentences, "\\b[^ ]+ing\\b"),
+                           "\\b[^ ]+ing\\b", simplify = TRUE)
+head(end_ing)
+```
+3. All plurals --> `"\\b[^ ]+(e|[^aiuos\\'])s\\b"`
+```{r}
+plurals <- str_extract_all(str_subset(sentences, "\\b[^ ]+(e|[^aiuos\\'])s\\b"),
+                           "\\b[^ ]+(e|[^aiuos\\'])s\\b", simplify = TRUE)
+head(plurals)
+```
+
+##### **<span style="color:blue">14.4.4.1</span>**    
+
+**| 1 |**
+Find words after numbers and pull out both number and word.
+```{r}
+# regex to find words after numbers
+nums <- c("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero")
+nums_rx <- paste0("(", str_c(nums, collapse = "|"), ")"," ([^ ]+)")
+
+has_nums <- sentences %>%
+  str_subset(nums_rx) %>%
+  str_match(nums_rx) %>%
+  head(5)
+
+has_nums
+```
+
+**| 2 |**
+Find all contractions and separate before and after apostrophe.
+```{r}
+# regex to find contractions
+ctrc_rx <- "([^ ]+)\\'(.{1})"
+
+has_ctrc <- sentences %>%
+  str_subset(ctrc_rx) %>%
+  str_match(ctrc_rx) %>%
+  head(5)
+
+has_ctrc
+```
+
+##### **<span style="color:blue">14.4.5.1</span>**    
+
+**| 1 |**
+Replace `/` with `\`
+```{r}
+# path with forward slash
+paths <- c("Users/Desktop/", "data/equip/measurements/")
+writeLines(paths)
+
+# replace forward slash with backslash
+paths_2 <- str_replace_all(paths,"\\/", "\\\\")
+writeLines(paths_2)
+```
+
+**| 2 |**
+Simple version of `str_to_lower()` using `replace_all()`
+```{r}
+# create lowercase replacement
+lowercase <- c("A" = "a", "B" = "b", "C" = "c", "D" = "d", "E" = "e", "F" = "f",
+              "G" = "g", "H" = "h", "I" = "i", "J" = "j", "K" = "k",
+              "L" = "l", "M" = "m", "N" = "n", "O" = "o", "P" = "p",
+              "Q" = "q", "R" = "r", "S" = "s", "T" = "t", "U" = "u",
+              "V" = "v", "W" = "w", "X" = "x", "Y" = "y", "Z" = "z")
+
+# replace stringr::sentences with lowercase
+sentences_lowercase <- str_replace_all(sentences, lowercase)
+head(sentences_lowercase)
+```
+
+**| 3 |**
+Switch first and last letters in `stringr::words'. The strings that are still words are those with the same first and last letter.
+```{r}
+# switch letters
+switched <- str_replace_all(stringr::words, "(^.)(.*)(.$)", "\\3\\2\\1")
+head(switched)
+
+# strings that are still words are those with the same first and last letter
+str_subset(str_extract_all(switched, "(^.).*\\1$"), "(^.).*\\1$")
+```
+
+##### **<span style="color:blue">14.4.6.1</span>**    
+
+**| 1 |**
+Split up a string like `"apples, pears, and bananas"`
+```{r}
+# the string
+stc <- "apples, pears, and bananas"
+
+# split the strings into each word
+str_split(stc, boundary("word"), simplify = TRUE)
+```
+
+**| 2 |**
+It is better to split up by `boundary("word")` than `" "` because boundary(word) selects the exact word while " " points to the type of separator that is separating the words. Therefore with `" "` the sentence is only being separated where there is whitespace and not necessarily because it is an exact word. This is seen with the inclusion of the period with every last word of the sentence when using `" "`.
+
+**| 3 |**
+Splitting with an empty string `""` splits a string into it's individual characters, including whitespace (see chunks below for testing). According to the documentation: `"An empty pattern, "", is equivalent to boundary("character")"`.
+```{r}
+# test on a string
+stc <- "apples, pears, and bananas."
+str_split(stc, "", simplify = TRUE)
+
+# test on a sentence from stringr::sentences
+str_split(sentences[[1]], "", simplify = TRUE)
+```
+
+##### **<span style="color:blue">14.5.1</span>**    
+
+**| 1 |**
+Find all strings containing `\`
+```{r}
+# example strings
+stc_backslash <- c("user\\home", "observations/folder", "data\\equip\\measurements")
+```
+
+* with `regex()` --> `regex("\\\\")`
+```{r}
+str_view_all(stc_backslash, regex("\\\\"))
+```
+
+* with `fixed()` --> `fixed("\\")`
+```{r}
+str_view_all(stc_backslash, fixed("\\"))
+```
+
+
+**| 2 |**
+*yet to be completed*
+
+##### **<span style="color:blue">14.7.1</span>**    
+
+**| 1 |**
+Find the stringi functions that:
+
+1. Count the number of words --> `stri_count_words()` or `stri_count_boundaries()`
+2. Find duplicated strings --> `stri_duplicated()` or `stri_duplicated_any()`
+3. Generate random text --> `stri_rand_strings()`
+
+**| 2 |**
+By adding the argument `locale =` inside of `stri_sort()`.
+
+---
+***
+### More with Data Wrangling: Air Quality Data
+***
+Available at the following github link: [R for Data Science Ch 14](http://r4ds.had.co.nz/strings.html)
