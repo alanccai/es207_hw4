@@ -146,7 +146,7 @@ complete <- loc %>%
   filter(str_detect(.$Address, "^(\\d|PO)") == TRUE)
 dim(complete)
 ```
-* Combineing regex into a single filter
+* Combining regex into a single filter
 ```{r}
 compl <- filter(loc, str_detect(loc$Address, "^(\\d|PO)") == TRUE 
                 & str_detect(loc$`Zip Code`, "\\d{5}") == TRUE)
@@ -184,7 +184,9 @@ av
 ```
 
 #### **<span style="color:blue"># 12</span>**
-Function to caculate the annual daily mean. Apply that function to Merced County. **Note** that the following function is only for the overall o3.filelist dataset since it contains variable names as specified in the dataset. It is not for use on a general dataset. **Overall the annual daily mean of o3 for Merced County is 0.032**.
+Function to caculate the annual daily mean. Apply that function to Merced County. **Note** that the following functions are only for the overall o3.filelist dataset since it contains variable names as specified in the dataset. It is not for use on a general dataset. I approached this problem in two ways:
+
+* Finding a single overall annual daily mean value of o3 for Merced County. The value is 0.032.
 ```{r}
 # function for overall annual daily mean
 annual_daily_mean <- function(df) {
@@ -203,5 +205,24 @@ merced_o3 <- daily.site %>%
 # overall annual daily in Mercred County
 merced_annual_daily <- annual_daily_mean(merced_o3)
 merced_annual_daily
+```
+* Generating a tibble which gives the annualy daily mean values of o3 for every year. This gives the daily mean value for the particular years listed.
+```{r}
+# function for annual daily mean for each year
+yearly_daily_mean <- function(df) {
+  annual <- df %>%
+    mutate(year = lubridate::year(date)) %>%
+    group_by(year) %>%                            # groups by year
+    summarize(Mean_o3 = mean(o3, na.rm = TRUE))   # daily mean by year
+  return(annual)
+}
+
+# filter data for Merced County only
+merced_o3 <- daily.site %>%
+  filter(str_detect(`County Name`, "^Merced$") == TRUE)
+
+# overall annual daily in Mercred County
+merced_yearly_daily <- yearly_daily_mean(merced_o3)
+merced_yearly_daily
 ```
 
