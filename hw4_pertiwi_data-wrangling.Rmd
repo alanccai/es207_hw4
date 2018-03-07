@@ -1,0 +1,207 @@
+---
+title: "Homework 4 (Data Wrangling) by Cininta Pertiwi"
+output:
+  html_notebook:
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+  github_document:
+    toc: false
+---
+***
+### Strings in R: R4DS Exercises
+***
+#### **<span style="color:blue"># 1</span>**
+Available at the following github link: [github.com/cnpw es207hw4/](https://github.com/cnpw/es207_hw4)
+
+***
+### More with Data Wrangling: Air Quality Data
+***
+
+```{r results='hide'}
+library(tidyverse)
+library(data.table)
+library(dplyr)
+library(lubridate)
+require(readr)
+
+```
+```{r results='hide'}
+setwd("ca_ozone")
+
+o3.filenames <- list.files(pattern = ".txt")
+o3.filelist <- lapply(o3.filenames, read_delim, delim = "|")
+names(o3.filelist) <- gsub(".txt","", o3.filenames)
+```
+
+#### **<span style="color:blue"># 2</span>**
+The o3.filelist class is a list. It contains a list of the contents of each `.txt` data file in the form of a data frame.
+```{r}
+class(o3.filelist)
+```
+
+#### **<span style="color:blue"># 3</span>**
+Explain what each line of code is doing using ~ 1 sentence.
+```{r}
+# o3.filenames <- list.files(pattern = ".txt")
+# This line creates a list of the names of the data files where it searches for the file
+# names by searching files that are .txt.
+
+# o3.filelist <- lapply(o3.filenames, read_delim, delim = "|")
+# This line creates a list containing all the datatsets that were read in where for each list the data is read in by identifying its delimiter "|".
+
+# names(o3.filelist) <- gsub(".txt","", o3.filenames)
+# This line removes the .txt from the names of the files (in this case the lists in o3.filelist) by replacing the .txt with empty characters.
+```
+
+#### **<span style="color:blue"># 4</span>**
+Rewrite the code to change the names in o3.filelist with `str_replace()` instead of `gsub()`
+```{r}
+# use str_replace() instead of gsub()
+# not run
+# names(o3.filelist) <- str_replace(o3.filenames, "\\.txt", "")
+```
+
+#### **<span style="color:blue"># 5</span>**
+```{r}
+daily <- o3.filelist %>%
+  rbindlist() %>%
+  group_by(site = as.factor(site), date) %>%
+  summarize(o3 = mean(obs, na.rm = TRUE))
+head(daily)
+```
+Rewrite above code using objects instead of piping.
+```{r}
+o3_big_list <- rbindlist(o3.filelist)
+o3_by_date <- group_by(o3_big_list, site = as.factor(site), date)
+daily_too <- summarize(o3_by_date, o3 = mean(obs, na.rm = TRUE))
+
+# check daily
+head(daily_too)
+```
+
+#### **<span style="color:blue"># 6</span>**
+Summarize the o3 data above by site and by month and by year using a piping operator (the monthly mean o3 for each site for each year).
+```{r}
+monthly <- o3.filelist %>%
+  rbindlist() %>%
+  mutate(year = lubridate::year(date)) %>%
+  mutate(month = lubridate::month(date)) %>%
+  group_by(site = as.factor(site), month, year) %>%
+  summarize(o3 = mean(obs, na.rm = TRUE))
+head(monthly)
+```
+
+#### **<span style="color:blue"># 7</span>**
+Challenge! Ozone pollution actually follows a very strong diurnal pattern. How would you summarize the daily data from above in a better way to capture that diurnal pattern?
+
+* I would group the data by hour:
+```{r}
+by_hour <- o3.filelist %>%
+  rbindlist() %>%
+  group_by(start_hour) %>%
+  summarize(o3 = mean(obs, na.rm = TRUE))
+head(by_hour)
+```
+* Then use a graph to visualize the pattern:
+```{r}
+ggplot(by_hour, aes(start_hour, o3)) + geom_bar(stat = 'identity')
+```
+
+**<span style="color:blue">For #8 and #9: More with Strings!</span>**
+```{r results='hide'}
+library(readxl)
+```
+```{r}
+setwd("ca_ozone")
+
+loc <- read_excel("location.xls")
+loc
+```
+
+#### **<span style="color:blue"># 8</span>**
+There are **89** site names that contain "San" or"Santa". I specifically specified that the "San" and "Santa" are only in the beginning of the string to prevent detecting them within a word or as part of the street name (which some "Site Name" include). If this is not specified, there is 98 site names contaning the strings "San" or "Santa".
+```{r}
+# specified only beginning of each string
+sum(str_detect(loc$`Site Name`, "^(San|Santa)") == TRUE)
+
+# not specified beginning of each string
+sum(str_detect(loc$`Site Name`, "San|Santa") == TRUE)
+```
+
+#### **<span style="color:blue"># 9</span>**
+There are **500** sites that do not have a complete address (full street address and zip code). I found out two ways to do this:
+
+* Filtering by steps through piping
+```{r}
+complete <- loc %>%
+  filter(is.na(.$Address) == FALSE) %>%
+  filter(is.na(.$`Zip Code`) == FALSE) %>%
+  filter(str_detect(.$`Zip Code`, "\\d{5}") == TRUE) %>%
+  filter(str_detect(.$Address, "^(\\d|PO)") == TRUE)
+dim(complete)
+```
+* Combineing regex into a single filter
+```{r}
+compl <- filter(loc, str_detect(loc$Address, "^(\\d|PO)") == TRUE 
+                & str_detect(loc$`Zip Code`, "\\d{5}") == TRUE)
+dim(compl)
+```
+
+#### **<span style="color:blue"># 10</span>**
+The difference between a semi join and an inner join is that for `semi_join()` the columns from the second tibble are not added into the joined tibble. Meanwhile for `inner_join()` the columns from the second tibble are added thus the joined tibble has both columns from the first and second tibbles.
+
+**<span style="color:blue">For #11 and #12: Manipulating your data</span>**
+```{r}
+colnames(loc)[1] <- "site"
+
+daily.site <- daily %>%
+  left_join(loc, by = "site")
+daily.site
+```
+
+#### **<span style="color:blue"># 11</span>**
+Function to calculate the annual mean, median, max and min of all sites that have “San” or “Santa” in their name. **Note** that the following function is only for the overall o3.filelist dataset since it contains variable names as specified in the dataset. It is not for use on a general dataset. 
+```{r}
+annual_values <- function(df) {
+  annual <- df %>%
+    filter(str_detect(`Site Name`, "^(San|Santa)") == TRUE) %>%
+    mutate(year = lubridate::year(date)) %>%
+    group_by(year, `Site Name`) %>%
+    summarize(Mean = mean(o3, na.rm = TRUE),
+              Median = median(o3, na.rm = TRUE),
+              Max = max(o3, na.rm = TRUE),
+              Min = min(o3, na.rm = TRUE))
+  return(annual)
+}
+av <- annual_values(daily.site)
+av
+```
+
+#### **<span style="color:blue"># 12</span>**
+Function to caculate the annual daily mean. Apply that function to Merced County. **Note** that the following function is only for the overall o3.filelist dataset since it contains variable names as specified in the dataset. It is not for use on a general dataset. **Overall the annual daily mean of o3 for Merced County is 0.032**.
+```{r}
+# function for overall annual daily mean
+annual_daily_mean <- function(df) {
+  annual <- df %>%
+    mutate(year = lubridate::year(date)) %>%
+    group_by(year) %>%                            # groups by year
+    summarize(Mean_o3 = mean(o3, na.rm = TRUE))   # daily mean by year
+  an_mean <- mean(annual$Mean_o3)                 # mean of daily mean by year
+  return(an_mean)
+}
+
+# filter data for Merced County only
+merced_o3 <- daily.site %>%
+  filter(str_detect(`County Name`, "^Merced$") == TRUE)
+
+# overall annual daily in Mercred County
+merced_annual_daily <- annual_daily_mean(merced_o3)
+merced_annual_daily
+```
+
