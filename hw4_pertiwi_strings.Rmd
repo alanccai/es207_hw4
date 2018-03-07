@@ -538,4 +538,4 @@ By adding the argument `locale =` inside of `stri_sort()`.
 ***
 ### More with Data Wrangling: Air Quality Data
 ***
-Available at the following github link: [R for Data Science Ch 14](http://r4ds.had.co.nz/strings.html)
+Available at the following github link: [github.com/cnpw es207hw4/](https://github.com/cnpw/es207_hw4)
