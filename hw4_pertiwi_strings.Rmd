@@ -534,6 +534,8 @@ Find the stringi functions that:
 **| 2 |**
 By adding the argument `locale =` inside of `stri_sort()`.
 
+# Alan Suggestion: Use the locale argument to the opts_collator argument.
+```
 ---
 ***
 ### More with Data Wrangling: Air Quality Data
